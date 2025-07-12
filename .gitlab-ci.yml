@@ -1,0 +1,60 @@
+stages:
+  - build
+
+variables:
+  DEBIAN_FRONTEND: noninteractive
+  CCACHE_DIR: $CI_PROJECT_DIR/.ccache
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .ccache/
+
+build_twrp:
+  stage: build
+  image: ubuntu:22.04
+  timeout: 3h
+  before_script:
+    - echo "🚀 Starting TWRP build for OnePlus Nord N10 5G..."
+    - apt-get update -qq
+    - apt-get install -y -qq git gnupg flex bison build-essential zip curl zlib1g-dev libxml2-utils xsltproc unzip fontconfig python3 python3-pip openjdk-8-jdk bc ccache imagemagick libncurses5-dev libssl-dev libxml2 lzop pngcrush rsync schedtool squashfs-tools wget
+    - mkdir -p ~/bin
+    - curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+    - chmod a+x ~/bin/repo
+    - export PATH=~/bin:$PATH
+    - git config --global user.name "GitLab CI"
+    - git config --global user.email "ci@gitlab.com"
+    - git config --global color.ui false
+  script:
+    - echo "📁 Setting up build directory..."
+    - mkdir -p ~/twrp-build
+    - cd ~/twrp-build
+    - export PATH=~/bin:$PATH
+    - export CCACHE_DIR=$CI_PROJECT_DIR/.ccache
+    - echo "🔄 Initializing TWRP source..."
+    - repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-11
+    - echo "📥 Syncing source code..."
+    - repo sync -j$(nproc) --force-sync --no-clone-bundle
+    - echo "📱 Adding OnePlus Nord N10 5G device tree..."
+    - git clone --depth=1 https://github.com/EduardoA3677/device_oneplus_billie_twrp.git device/oneplus/billie
+    - echo "🏗️ Building TWRP..."
+    - export ALLOW_MISSING_DEPENDENCIES=true
+    - source build/envsetup.sh
+    - lunch twrp_billie-eng
+    - mka recoveryimage
+    - echo "✅ TWRP build completed!"
+    - ls -la out/target/product/billie/
+    - file out/target/product/billie/recovery.img
+  artifacts:
+    name: "twrp-oneplus-nord-n10-5g-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ~/twrp-build/out/target/product/billie/recovery.img
+      - ~/twrp-build/out/target/product/billie/ramdisk-recovery.img
+    expire_in: 1 week
+    when: on_success
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - when: manual
+  tags:
+    - linux
+    - docker

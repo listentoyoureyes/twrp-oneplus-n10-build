@@ -67,3 +67,38 @@ mka recoveryimage
 - EduardoA3677 for the device tree
 - TeamWin for TWRP
 - OnePlus for the device
+
+## GitLab CI/CD Automatic Build
+
+This repository includes GitLab CI/CD configuration for automatic TWRP building.
+
+### How to Use:
+1. **Import this repository** to GitLab
+2. **Pipeline will run automatically** on commits to main branch
+3. **Or trigger manually** from GitLab CI/CD interface
+4. **Download artifacts** after build completes
+
+### Build Status:
+- **Build Time**: ~45-60 minutes
+- **Artifacts**: recovery.img and ramdisk-recovery.img
+- **Retention**: 1 week
+- **Runners**: GitLab shared runners (Ubuntu 22.04)
+
+### Manual Trigger:
+- Go to GitLab project → CI/CD → Pipelines
+- Click "Run Pipeline"
+- Select "main" branch
+- Click "Run Pipeline"
+
+### Download Results:
+- Go to completed pipeline
+- Click "build_twrp" job
+- Download artifacts from right sidebar
+- Extract `recovery.img` for flashing
+
+### GitLab CI/CD Features:
+- ✅ **Automatic builds** on code changes
+- ✅ **Artifact storage** for easy download
+- ✅ **Build caching** for faster subsequent builds
+- ✅ **No local setup required**
+- ✅ **Free for public repositories**
